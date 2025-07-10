@@ -1,25 +1,86 @@
-1. myWidgets.py
-ㄴclass Widget1
-  ㄴ def __init__
-  ㄴ def get_data
-  ㄴ def set_data
-ㄴclass Widget2
-  ㄴ def __init__
-  ㄴ def get_data
-  ㄴ def set_data
-ㄴclass Widget3
-  ㄴ def __init__
-  ㄴ def get_data
-  ㄴ def set_data
-ㄴclass Widget31
-  ㄴ def __init__
-  ㄴ def get_data
-  ㄴ def set_data
-  ㄴ def create_exclusive_handler
-  ㄴ def get_selected_categories
-ㄴclass Widget32
-  ㄴ def __init__
-  ㄴ def get_data
-  ㄴ def set_data
-ㄴclass Widget4
-  ㄴ def __init__
+myWidgets.py
+ㄴ class Widget1
+  ㄴ def init
+    - widget 전체에 수직 레이아웃 사용, Top 정렬 고정
+    - “전시회 정보” 텍스트 14pt, bold로 표시, Top 정렬 고정
+    - 3행×2열 테이블 생성, 첫 번째 행에 “항목”, “내용” 설정
+    - 첫 번째 열: ["전시회명","주최기관","후원기관"] 읽기 전용, 두 번째 열: 빈 문자열로 초기화
+    - 모델을 QTableView에 연결
+    - 가로 헤더 마지막 열이 남은 공간을 채우도록 설정
+    - 세로 헤더(행 번호) 숨김 처리
+    - 테이블 크기 고정(너비 500px, 높이 행 높이×3 + 헤더 높이)
+  ㄴ def get_data
+    - 전시회 정보 테이블의 데이터를 딕셔너리로 반환
+    - 0번 열의 텍스트를 key, 1번 열의 텍스트를 value로 dict 구조로 저장
+  ㄴ def set_data
+    - 딕셔너리 데이터를 테이블에 반영
+    - 테이블 행 수만큼 반복하며 0번 열의 텍스트를 key로 읽어옴
+    - key가 data_dict에 있으면 1번 열에 설정, 없으면 빈 문자열로 초기화
+
+ㄴ class Widget2
+  ㄴ def init
+    - widget 전체에 수직 레이아웃 사용, Top 정렬 고정
+    - “작가 정보” 텍스트 14pt, bold로 표시, Top 정렬 고정
+    - 7행×2열 테이블 생성, 첫 번째 행에 “항목”, “내용” 설정
+    - 첫 번째 열: ["이름","국적","출생년도","사망년도","학력","작품 경향","약력"] 읽기 전용, 두 번째 열: 빈 문자열
+    - 모델을 QTableView에 연결
+    - 가로 헤더 마지막 열 stretch 설정, 세로 헤더 숨김
+    - 테이블 크기 고정(너비 500px, 높이 행 높이×7 + 헤더 높이)
+  ㄴ def get_data
+    - 작가 정보 테이블의 데이터를 딕셔너리로 반환
+    - 0번 열의 텍스트를 key, 1번 열의 텍스트를 value로 dict 구조로 저장
+  ㄴ def set_data
+    - 주어진 딕셔너리를 이용해 작가 정보 테이블에 값 설정
+    - 테이블 행 수만큼 반복하며 0번 열의 텍스트를 key로 읽어옴
+    - key가 data_dict에 있으면 1번 열에 설정, 없으면 빈 문자열로 초기화
+
+ㄴ class Widget3
+  ㄴ def init
+    - 수직 레이아웃 설정
+    - QTabWidget 생성 및 멤버로 저장
+    - 탭 1 (“작품 정보”): Widget31 추가
+    - 탭 2 (“손상 정보”): Widget32 추가
+    - 탭 3 (“작품 이미지”): ImageViewerApp 추가
+    - tab_widget을 메인 레이아웃에 추가
+  ㄴ def get_data
+    - widget31/get_data(), widget32/get_data(), widget33/get_data() 결과를 dict로 묶어 반환
+  ㄴ def set_data
+    - 데이터에 “widget31”, “widget32”, “widget33” 키가 있으면 해당 하위 위젯의 set_data() 호출
+    - Debug print 포함
+
+ㄴ class Widget31
+  ㄴ def init
+    - 수직 레이아웃 설정, Top 정렬
+    - “작품 유형” QGroupBox 생성, 최대 크기 정책, font 12pt 설정
+    - 6개 카테고리(Painting,…) 체크박스+라벨을 가로 레이아웃으로 묶어 그룹박스에 추가
+    - 체크박스들에 상호배타(exclusive) handler 연결
+    - Identification 테이블(8×2) 생성: 첫 열에 field names(읽기 전용), 둘째 열에 빈 값
+    - 테이블 설정: stretchLastSection, 세로 헤더 숨김, 너비 400px
+    - placeholder_table(0×2) 생성, 동일 설정, 너비 400px
+  ㄴ def get_data
+    - Identification 테이블의 key:value를 dict에 저장
+    - “category” 키에 get_selected_categories() 반환 리스트 추가
+  ㄴ def set_data
+    - data 딕셔너리에서 key에 해당하는 값을 Identification 테이블에 설정
+    - data[“category”] 리스트에 따라 체크박스 상태 설정
+  ㄴ def create_exclusive_handler
+    - 특정 체크박스가 체크되면 다른 체크박스들의 signals를 block 후 해제하여 exclusive 동작 구현
+  ㄴ def get_selected_categories
+    - 체크된 체크박스의 description 리스트 반환
+
+ㄴ class Widget32
+  ㄴ def init
+    - 수평 레이아웃 설정
+    - support_checkboxes/paint_checkboxes/framing_checkboxes 리스트 초기화
+    - Support: 다수의 체크박스+라벨을 가로 레이아웃으로 묶어 세로로 추가
+    - Paint Layer: 동일 패턴으로 체크박스 생성
+    - Framing: 동일 패턴으로 체크박스 생성
+  ㄴ def get_data
+    - support/paint_layer/framing 리스트에서 체크된 항목들의 text 리스트를 dict에 담아 반환
+  ㄴ def set_data
+    - data[“support”]/[“paint_layer”]/[“framing”] 리스트에 따라 체크박스 상태 설정
+
+ㄴ class Widget4
+  ㄴ def init
+    - 수직 레이아웃 설정
+    - QLabel("widget4 for Nothing") 추가
