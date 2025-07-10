@@ -1,0 +1,67 @@
+import os
+import openpyxl
+import reportlab.rl_config
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.lib.pagesizes import A4
+from reportlab.pdfgen import canvas
+from reportlab.lib.units import mm
+
+# ────────────────────────────────────────────────
+# 1) 윈도우 시스템 폰트 경로를 등록하여 malgun.ttf 자동 탐색
+reportlab.rl_config.TTFSearchPath.append(r"C:\Windows\Fonts")
+
+# 2) 한글 폰트 등록
+#    • 시스템 폰트 사용: malgun.ttf
+pdfmetrics.registerFont(TTFont('MalgunGothic', 'malgun.ttf'))
+#    • (선택) 프로젝트 폴더에 NanumGothic.ttf를 두셨으면:
+# pdfmetrics.registerFont(TTFont('NanumGothic', r".\NanumGothic.ttf"))
+
+# ────────────────────────────────────────────────
+# 3) 엑셀 파일을 read_only 모드로 열기 (스타일 에러 방지)
+INPUT_XLSX = 'report_blank1.xlsx'
+wb = openpyxl.load_workbook(INPUT_XLSX, data_only=True, read_only=True)
+sheet = wb.active   # 또는 wb['시트명']
+
+# 4) 모든 셀 값을 2차원 리스트로 가져오기
+rows = list(sheet.iter_rows(values_only=True))
+n_rows = len(rows)
+n_cols = max(len(r) for r in rows) if rows else 0
+
+# ────────────────────────────────────────────────
+# 5) PDF 캔버스 기본 설정
+OUTPUT_PDF = 'output.pdf'
+c = canvas.Canvas(OUTPUT_PDF, pagesize=A4)
+c.setFont('MalgunGothic', 10)
+
+LEFT_MARGIN   = 15 * mm
+BOTTOM_MARGIN = 15 * mm
+
+# 6) 셀 크기 설정 (실제 양식에 맞춰 조정)
+COL_WIDTHS = [20 * mm] * n_cols   # 열 너비를 모두 20mm로 지정
+ROW_HEIGHTS = [ 8 * mm] * n_rows  # 행 높이를 모두  8mm로 지정
+
+# ────────────────────────────────────────────────
+# 7) 시트 내용을 PDF에 그리는 함수
+def draw_sheet(data_rows, canvas_obj):
+    page_w, page_h = A4
+    y_cursor = page_h - BOTTOM_MARGIN
+    for row_idx, row_data in enumerate(data_rows):
+        row_h = ROW_HEIGHTS[row_idx]
+        y_cursor -= row_h
+        x_cursor = LEFT_MARGIN
+        for col_idx in range(n_cols):
+            cell_val = row_data[col_idx] if col_idx < len(row_data) else None
+            if cell_val is not None:
+                text = str(cell_val)
+                # 셀 안쪽 2mm 패딩 적용
+                canvas_obj.drawString(x_cursor + 2*mm, y_cursor + 2*mm, text)
+            x_cursor += COL_WIDTHS[col_idx]
+
+# ────────────────────────────────────────────────
+# 8) 실제 그리기 및 저장
+draw_sheet(rows, c)
+c.showPage()
+c.save()
+
+print(f"≫ '{OUTPUT_PDF}' 생성 완료")
