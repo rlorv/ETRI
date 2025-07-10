@@ -152,10 +152,6 @@ class ConditionMapViewer(QWidget):
         main_layout.addLayout(left_layout)
         main_layout.addLayout(right_layout)
 
-    '''
-    Precondition : index identifies selected subimage. 
-    Postcondition: self.selected_zoom_index is set to index. 
-    '''
     def select_zoom(self, index):
         
         # Scroll to selected zoom image
@@ -187,10 +183,6 @@ class ConditionMapViewer(QWidget):
         # Requests a redraw of the widget. Ensures the GUI reflects the updated
         # selection (especially the condition map overlay).
 
-    '''
-    Precondition : self.selected_zoom_index must have been set. 
-    Postcondition: self.temp_rect_start is set. 
-    '''
     def start_rect(self, event):
         if self.selected_zoom_index is None:
             return
@@ -204,14 +196,6 @@ class ConditionMapViewer(QWidget):
                 self.update()
         else: 
             pass 
-
-    ''' 
-    def end_rect(self, event):
-        if self.selected_zoom_index is None:
-            return
-        self.temp_rect_end = event.position().toPoint()
-        self.update()
-    '''
 
     def track_rect(self, event):
         if self.selected_zoom_index is None or self.temp_rect_start is None:
@@ -397,9 +381,6 @@ class ConditionMapViewer(QWidget):
             ])
         )
 
-    '''
-    
-    '''
     def paint_overlay(self, event):
         
         QLabel.paintEvent(self.map_label, event)
@@ -447,28 +428,9 @@ class ClickableLabel(QLabel):
     def mousePressEvent(self, event):
         self.clicked.emit()
         super().mousePressEvent(event)
-"""
-Member Functions: 
- __init__(self)
- open_images(self)
- load_images(self, filenames)
- set_as_condition_map(self)
- set_as_zoom_in(self)
- re_layout_images(self)
- select_image(self, label):
- update_selection_style(self)
- move_left(self)
- move_right(self)
- delete_image(self)
- save_images(self)
- view_condition_map(self)
-"""
+
 class ImageViewerApp(QWidget):
 
-    """
-    Precondition : 
-    Postcondition: 
-    """
     def __init__(self):
         
         """
@@ -538,9 +500,6 @@ class ImageViewerApp(QWidget):
         main_layout.addLayout(left_layout)
         main_layout.addWidget(self.scroll_area)
         self.setLayout(main_layout)
-
-    def get_data(self): 
-        pass
     
     def set_data(self, data): 
         print(data)
