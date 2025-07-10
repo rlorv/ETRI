@@ -1,0 +1,503 @@
+
+from PySide6.QtWidgets import (
+    QWidget, QVBoxLayout, QHBoxLayout, QPushButton,
+    QTableView, QLineEdit, QCheckBox, QAbstractItemView, QLabel,
+    QGridLayout, QTabWidget
+)
+from PySide6.QtGui import QStandardItemModel, QStandardItem
+from PySide6.QtCore import Qt
+
+from PySide6.QtWidgets import QWidget, QLabel, QVBoxLayout, QHBoxLayout, QCheckBox
+
+from PySide6.QtWidgets import (
+    QWidget, QLabel, QVBoxLayout, QHBoxLayout,
+    QCheckBox, QGroupBox
+)
+
+from PySide6.QtWidgets import (
+    QWidget, QLabel, QVBoxLayout, QHBoxLayout,
+    QCheckBox, QGroupBox, QSizePolicy
+)
+from PySide6.QtCore import Qt
+
+from PySide6.QtWidgets import (
+    QWidget, QLabel, QVBoxLayout, QHBoxLayout,
+    QCheckBox, QGroupBox, QSizePolicy
+)
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QFont
+
+from PySide6.QtWidgets import (
+    QWidget, QLabel, QVBoxLayout, QHBoxLayout,
+    QCheckBox, QGroupBox, QSizePolicy
+)
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QFont
+
+from myImage import * 
+
+class Widget1(QWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        #widget 전체에 수직 레이아웃 사용, Top 정렬 고정
+        layout = QVBoxLayout(self)
+        layout.setAlignment(Qt.AlignTop)  # 꼭 필요
+
+        # --- 전시회 정보 라벨 ---
+        #"전시회 정보" 텍스트 14pt, bold로 표시, Top 정렬 고정
+        exhibition_label = QLabel("전시회 정보")
+        font = QFont()
+        font.setPointSize(14)
+        font.setBold(True)
+        exhibition_label.setFont(font)
+        layout.addWidget(exhibition_label, alignment=Qt.AlignTop)
+
+        # --- 전시회 정보 테이블 ---
+        #3행 2열 table생성, 첫번째 행에 "항목", "내용" 설정
+        self.exhibition_table = QTableView()
+        self.exhibition_model = QStandardItemModel(3, 2)
+        self.exhibition_model.setHorizontalHeaderLabels(["항목", "내용"])
+
+        #첫번째 열: ["전시회명", "주최기관", "후원기관"](setEditable(False)-읽기전용), 두번째 열: 빈 문자열로 초기화된 QStandardItem
+        fields = ["전시회명", "주최기관", "후원기관"]
+        for row, name in enumerate(fields):
+            field_item = QStandardItem(name)
+            field_item.setEditable(False)
+            value_item = QStandardItem("")
+            self.exhibition_model.setItem(row, 0, field_item)
+            self.exhibition_model.setItem(row, 1, value_item)
+            
+        #위 모델을 QTableView에 연결
+        self.exhibition_table.setModel(self.exhibition_model)
+        self.exhibition_table.horizontalHeader().setStretchLastSection(True) #가로헤더 마지막 열이 남은 공간 채우도록함
+        self.exhibition_table.verticalHeader().setVisible(False) #세로헤더(행 번호) 숨김처리
+        #테이블 크기 고정, 너비:500px, 높이: 한행 높이*3+30px(헤더높이)
+        self.exhibition_table.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed) 
+        self.exhibition_table.setFixedWidth(500)
+        self.exhibition_table.setFixedHeight(self.exhibition_table.verticalHeader().defaultSectionSize() * 3 + 30)
+
+        layout.addWidget(self.exhibition_table, alignment=Qt.AlignTop)
+    
+    def get_data(self):
+        """전시회 정보 테이블의 데이터를 딕셔너리로 반환"""
+        data = {}
+        #0번 열의 text: key, 1번 열의 text: value- dict 구조로 저장, return
+        model = self.exhibition_model  # 또는 self.exhibition_table.model()
+        for row in range(model.rowCount()):
+            key = model.item(row, 0).text().strip()
+            value = model.item(row, 1).text().strip()
+            data[key] = value
+        return data
+    
+    def set_data(self, data_dict):
+        """딕셔너리 데이터를 테이블에 반영"""
+        model = self.exhibition_model
+        #테이블 행 수만큼 반복, 매 행의 0번 열의 text를 key로 읽어옴
+        for row in range(model.rowCount()):
+            key = model.item(row, 0).text().strip()
+            #읽어온 key가 data_dict에 있으면 그 key의 value를 1번 열에 설정, 없으면 빈 문자열로 초기화
+            if key in data_dict:
+                model.item(row, 1).setText(data_dict[key])
+            else:
+                model.item(row, 1).setText("")  # 값이 없으면 공백으로 초기화
+
+class Widget2(QWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        #widget 전체에 수직 레이아웃 사용, Top 정렬 고정
+        layout = QVBoxLayout(self)
+        layout.setAlignment(Qt.AlignTop)
+
+        # --- 작가 정보 라벨 ---
+        #"작가 정보" 텍스트 14pt, bold로 표시, Top 정렬 고정
+        artist_label = QLabel("작가 정보")
+        font = QFont()
+        font.setPointSize(14)
+        font.setBold(True)
+        artist_label.setFont(font)
+        layout.addWidget(artist_label, alignment=Qt.AlignTop)
+
+        # --- 작가 정보 테이블 ---
+        #3행 2열 table생성, 첫번째 행에 "항목", "내용" 설정
+        self.artist_table = QTableView()
+        self.artist_model = QStandardItemModel(7, 2)
+        self.artist_model.setHorizontalHeaderLabels(["항목", "내용"])
+        #첫번째 열: ["이름", "국적", "출생년도", "사망년도", "학력", "작품 경향", "약력"](setEditable(False)-읽기전용), 두번째 열: 빈 문자열로 초기화된 QStandardItem
+        fields = ["이름", "국적", "출생년도", "사망년도", "학력", "작품 경향", "약력"]
+        for row, name in enumerate(fields):
+            field_item = QStandardItem(name)
+            field_item.setEditable(False)
+            value_item = QStandardItem("")
+            self.artist_model.setItem(row, 0, field_item)
+            self.artist_model.setItem(row, 1, value_item)
+
+        #위 모델을 QTableView에 연결
+        self.artist_table.setModel(self.artist_model)
+        self.artist_table.horizontalHeader().setStretchLastSection(True) #가로헤더 마지막 열이 남은 공간 채우도록함
+        self.artist_table.verticalHeader().setVisible(False) #세로헤더(행 번호) 숨김처리
+        #테이블 크기 고정, 너비:500px, 높이: 한행 높이*7+30px(헤더높이)
+        self.artist_table.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        self.artist_table.setFixedWidth(500)
+        self.artist_table.setFixedHeight(self.artist_table.verticalHeader().defaultSectionSize() * 7 + 30)
+
+        layout.addWidget(self.artist_table, alignment=Qt.AlignTop)
+
+    def get_data(self):
+        """작가 정보 테이블의 데이터를 딕셔너리로 반환"""
+        data = {}
+        #0번 열의 text: key, 1번 열의 text: value- dict 구조로 저장, return
+        model = self.artist_model  # 또는 self.artist_table.model()
+        for row in range(model.rowCount()):
+            key = model.item(row, 0).text().strip()
+            value = model.item(row, 1).text().strip()
+            data[key] = value
+        return data
+    
+    def set_data(self, data_dict):
+        """주어진 딕셔너리를 이용해 작가 정보 테이블에 값 설정"""
+        model = self.artist_model
+        #테이블 행 수만큼 반복, 매 행의 0번 열의 text를 key로 읽어옴
+        for row in range(model.rowCount()):
+            key = model.item(row, 0).text().strip()
+            #읽어온 key가 data_dict에 있으면 그 key의 value를 1번 열에 설정, 없으면 빈 문자열로 초기화
+            if key in data_dict:
+                model.item(row, 1).setText(data_dict[key])
+            else:
+                model.item(row, 1).setText("")  # 값이 없으면 빈 문자열로 초기화
+
+class Widget3(QWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+        layout = QVBoxLayout(self)
+
+        # 탭 위젯 생성: 여러 tab을 담을 QTabWidget을 만들고, 나중에 참조할 수 있도록 self.tab_widget에도 저장
+        tab_widget = QTabWidget()
+        self.tab_widget = tab_widget  # ✅ 탭 위젯을 멤버로 저장해둠
+
+        # --- 탭 1: 작품 정보 ---
+        #빈 컨테이너 widget(identification_tab)을 만들고, 거기에 widget31 추가, tab 제목을 "작품 정보"로 하여 tab_widget에 등록
+        identification_tab = QWidget()
+        id_layout = QVBoxLayout(identification_tab)
+
+        # 여기에 widget31을 추가
+        self.widget31 = Widget31()
+        id_layout.addWidget(self.widget31)
+
+        tab_widget.addTab(identification_tab, "작품 정보")
+
+        # --- 탭 2: 손상 정보 ---
+        #빈 컨테이너 widget(description_tab)을 만들고, 거기에 widget32 추가, tab 제목을 "손상 정보"로 하여 tab_widget에 등록
+        description_tab = QWidget()
+        description_layout = QVBoxLayout(description_tab)
+
+        # 여기에 Widget32 추가 
+        self.widget32 = Widget32()
+        description_layout.addWidget(self.widget32)
+
+        tab_widget.addTab(description_tab, "손상 정보")
+
+        # --- 탭 3: 작품 이미지 ---
+        #빈 컨테이너 widget(condition_tab)을 만들고, 거기에 imageViewerApp 추가, tab 제목을 "작품 이미지"로 하여 tab_widget에 등록
+        condition_tab = QWidget()
+        condition_layout = QVBoxLayout(condition_tab)
+
+        # 여기에 imageViewerApp 추가 
+        self.widget33 = ImageViewerApp()
+        condition_layout.addWidget(self.widget33)
+
+        tab_widget.addTab(condition_tab, "작품 이미지")
+
+        layout.addWidget(tab_widget)
+
+    '''
+    def get_data(self):
+        current_tab = self.tab_widget.currentWidget()
+
+        if current_tab is self.widget31:
+            return self.widget31.get_data()
+        elif current_tab is self.widget32:
+            return self.widget32.get_data()
+        elif current_tab is self.widget33:
+            return self.widget33.get_data()
+        else:
+            return {}
+    
+    def set_data(self, data: dict):
+        current_tab = self.tab_widget.currentWidget()
+
+        if current_tab == self.widget31:
+            self.widget31.set_data(data)
+        elif current_tab == self.widget32:
+            self.widget32.set_data(data)
+        elif current_tab == self.widget33:
+            if hasattr(self.widget33, "set_data"):
+                self.widget33.set_data(data)
+    '''
+    def get_data(self):
+        # "작품 정보", "손상 정보", "작품 이미지" tab의 데이터를 딕셔너리로 반환(각각 key "widget31", "widget32", "widget33"으로 반환)
+        return {
+            "widget31": self.widget31.get_data(),
+            "widget32": self.widget32.get_data(),
+            "widget33": self.widget33.get_data()  # 선택적 구현
+        }
+
+    def set_data(self, data):
+        #상위 데이터에 "widget31", "widget32", "widget33"이 있으면 각 key에 매핑된 하위 딕셔너리 꺼내어 반환
+        print("Debug set_data(): Entered.")
+        print("Debug set_data(): data", data)
+
+        if "widget31" in data:
+            print("   Debug: Widget31")
+            self.widget31.set_data(data["widget31"])
+        if "widget32" in data:
+            print("   Debug: Widget31")
+            self.widget32.set_data(data["widget32"])
+        if "widget33" in data:
+            print("   Debug: Widget31")
+            self.widget33.set_data(data["widget33"])
+
+class Widget31(QWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+        main_layout = QVBoxLayout(self)
+        main_layout.setAlignment(Qt.AlignTop)
+
+        # --- 1층: 작품 유형 그룹박스 ---
+        #QGroupBox에 "작품 유형"이라고 제목을 붙이고, 콘텐츠 크기만큼 차지하도록 설정, 12pt
+        group_box = QGroupBox("작품 유형")
+        group_box.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Maximum)
+        title_font = QFont()
+        title_font.setPointSize(12)
+        group_box.setFont(title_font)
+
+        #가로 레이아웃, 여백/간격 설정
+        group_layout = QHBoxLayout()
+        group_layout.setContentsMargins(10, 10, 10, 10)
+        group_layout.setSpacing(20)
+
+        #6가지 유형(Painting, Drawing, Print, Sculpture, Object, New Media)를 (체크박스, 라벨) 쌍으로 만듦
+        categories = [
+            ("Painting", "painting"),
+            ("Drawing", "drawing"),
+            ("Print", "print"),
+            ("Sculpture", "sculpture"),
+            ("Object", "object"),
+            ("New Media", "new media")
+        ]
+
+        #한번에 하나의 checkbox만 선택될 수 있도록(exclusive 처리) stateChanged 시그널을 create_exclusive_handler(checkbox) 에 연결
+        self.checkboxes = []
+        for label_text, description in categories:
+            checkbox = QCheckBox()
+            label = QLabel(description)
+            checkbox.stateChanged.connect(self.create_exclusive_handler(checkbox))
+
+            pair_layout = QHBoxLayout()
+            pair_layout.setSpacing(4)
+            pair_layout.setContentsMargins(0, 0, 0, 0)
+            pair_layout.addWidget(checkbox)
+            pair_layout.addWidget(label)
+
+            pair_widget = QWidget()
+            pair_widget.setLayout(pair_layout)
+            pair_widget.setFixedWidth(120)
+
+            #self.checkboxes에 저장해 나중에 선택된 유형 쉽게 확인하도록 함
+            group_layout.addWidget(pair_widget)
+            self.checkboxes.append((checkbox, description))
+
+        #그룹박스에 레이아웃 적용,메인 레이아웃에 추가
+        group_box.setLayout(group_layout)
+        main_layout.addWidget(group_box)
+
+        # --- 2층: 수평 2열 레이아웃 ---
+        row_layout = QHBoxLayout()
+
+        # --- 왼쪽: Identification 테이블 ---
+        #8*2 QStandardItemModel 생성, 첫번째 열: ["Number", "Artist", "Title", "Date", "Technique", "Dimension", "Frame Dimension", "Reference"]의 읽기전용 필드명, 두번째 열: 빈 QstadardItem: 사용자가 값 입력
+        self.id_table = QTableView()
+        self.id_model = QStandardItemModel(8, 2)
+        self.id_model.setHorizontalHeaderLabels(["Field", "Value"])
+        field_names = [
+            "Number", "Artist", "Title", "Date",
+            "Technique", "Dimension", "Frame Dimension", "Reference"
+        ]
+        for row, name in enumerate(field_names):
+            item = QStandardItem(name)
+            item.setEditable(False)
+            self.id_model.setItem(row, 0, item)
+            self.id_model.setItem(row, 1, QStandardItem(""))
+
+        #행 번호 숨김, 마지막 열이 남은 공간 채우도록 설정, width:400px
+        self.id_table.setModel(self.id_model)
+        self.id_table.horizontalHeader().setStretchLastSection(True)
+        self.id_table.verticalHeader().setVisible(False)
+        self.id_table.setFixedWidth(400)
+        row_layout.addWidget(self.id_table)
+
+        # --- 오른쪽: 빈 테이블뷰 추가 ---
+        #0행짜리 빈 table 추가, 필요시 확장, 별도 데이터 표시
+        self.placeholder_table = QTableView()
+        self.placeholder_model = QStandardItemModel(0, 2)
+        self.placeholder_model.setHorizontalHeaderLabels(["Field", "Value"])
+        self.placeholder_table.setModel(self.placeholder_model)
+        self.placeholder_table.horizontalHeader().setStretchLastSection(True)
+        self.placeholder_table.verticalHeader().setVisible(False)
+        self.placeholder_table.setFixedWidth(400)
+        row_layout.addWidget(self.placeholder_table)
+
+        main_layout.addLayout(row_layout)
+
+    
+    def get_data(self):
+    #빈 딕셔너리 초기화, 첫번째 열의 text를 key로, 두번째 열의 text를 value로 읽음
+    #get_selected_categories에서 체크된 박스들의 description 문자열 리스트 반환
+        data = {}
+        for row in range(self.id_model.rowCount()):
+            key = self.id_model.item(row, 0).text().strip()
+            value = self.id_model.item(row, 1).text().strip()
+            data[key] = value
+        data["category"] = self.get_selected_categories()
+        return data
+    
+    def set_data(self, data: dict):
+        #각 행의 key읽어와서 data딕셔너리에 키 있으면 두번째 열을 새로 설정
+        """Checkbox + ID 테이블 값을 설정"""
+        # 테이블 값 설정
+        for row in range(self.id_model.rowCount()):
+            key = self.id_model.item(row, 0).text().strip()
+            if key in data:
+                self.id_model.setItem(row, 1, QStandardItem(data[key]))
+        
+        # category 설정 (exclusive checkboxes)
+        category_value = data.get("category", [])
+        for cb, desc in self.checkboxes:
+            cb.setChecked(desc in category_value)
+
+    def create_exclusive_handler(self, source_checkbox):
+    #특정 체크박스가 체크되면 나머지는 자동 해제(Handler는 stateChanged 시그널로 호출, Qt.checked될때만 동작)
+        def handler(state):
+            if state == Qt.Checked:
+                for cb, _ in self.checkboxes:
+                    if cb is not source_checkbox:
+                        cb.blockSignals(True)
+                        cb.setChecked(False)
+                        cb.blockSignals(False)
+        return handler
+
+    def get_selected_categories(self):
+    #현재 체크된 체크박스의 descriiption 목록을 return
+        return [desc for cb, desc in self.checkboxes if cb.isChecked()]
+    
+class Widget32(QWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+        #checkbox상태 저장하기 위해 초기화
+        #(QCheckBox, 문자열) 쌍 저장해둠
+        self.support_checkboxes = []
+        self.paint_checkboxes = []
+        self.framing_checkboxes = []
+
+        main_layout = QHBoxLayout(self)
+
+        # 1열: Support
+        #수직 레이아웃 만들고 각 체크박스를 세로로 나열
+        #text마다 QCheckBox, QLabel 생성-둘을 묶은 가로 layout 만들어 support_layout에 추가
+        #(checkbox, text) 쌍을 self.support_checkboxes에 저장
+        support_layout = QVBoxLayout()
+        support_layout.setSpacing(2)
+        support_layout.addWidget(QLabel("Alteration of the support"))
+        support_items = [
+            "마모", "이물질", "파손", "접힌자국(금)", "잘림", "검게됨", "변형", "박리", "눌림",
+            "색이바램", "접힘", "구멍", "(습기)얼룩", "들뜸", "늘어짐", "유실", "곰팡이", "수축", "부풀음", "찢김", "울음, 주름"
+        ]
+        for text in support_items:
+            checkbox = QCheckBox()
+            layout = QHBoxLayout()
+            layout.setSpacing(4)
+            layout.addWidget(checkbox)
+            layout.addWidget(QLabel(text))
+            support_layout.addLayout(layout)
+            self.support_checkboxes.append((checkbox, text))
+
+        # 2열: Paint Layer
+        #paint layer 손상 항목들 체크박스 생성하여 세로로 나열-self.paint_checkboxes에 저장
+        paint_layout = QVBoxLayout()
+        paint_layout.setSpacing(4)
+        paint_layout.addWidget(QLabel("Alteration of the paint layer"))
+        paint_items = [
+            "마모", "이물질", "백화", "붓모", "부식", "균열", "박리", "변색", "먼지, 때",
+            "손자국", "폭싱", "낙서", "들뜸", "박락", "곰팡이", "구복원 흔적", "덧칠", "긁힘",
+            "(습기) 얼룩", "황변", "기타"
+        ]
+        for text in paint_items:
+            checkbox = QCheckBox()
+            layout = QHBoxLayout()
+            layout.setSpacing(4)
+            layout.addWidget(checkbox)
+            layout.addWidget(QLabel(text))
+            paint_layout.addLayout(layout)
+            self.paint_checkboxes.append((checkbox, text))
+
+        # 3열: Framing
+        #framing layer 손상 항목들 체크박스 생성하여 세로로 나열-self.framing_checkboxes에 저장
+        framing_layout = QVBoxLayout()
+        framing_layout.setSpacing(4)
+        framing_layout.addWidget(QLabel("Alteration of the framing"))
+        framing_items = [
+            "마모", "이물질", "접착제잔여물", "후면 보강", "파손", "찍힘", "먼지, 때", "후면 기재사항",
+            "유실, 칠박락", "물감", "구복원 흔적", "긁힘", "이격", "얼룩", "벌레구멍"
+        ]
+        for text in framing_items:
+            checkbox = QCheckBox()
+            layout = QHBoxLayout()
+            layout.setSpacing(4)
+            layout.addWidget(checkbox)
+            layout.addWidget(QLabel(text))
+            framing_layout.addLayout(layout)
+            self.framing_checkboxes.append((checkbox, text))
+
+        #3개의 QVBoxLayout을 main_layout에 순서대로 붙여 화면에 support|paint|framing이 나란히 표시되도록 함
+        main_layout.addLayout(support_layout)
+        main_layout.addLayout(paint_layout)
+        main_layout.addLayout(framing_layout)
+
+    def get_data(self):
+        #각 리스트 순회하여 cb.isChecked가 True인 checkbox의 text만 골라서 리스트로 만듦
+        #키 support, paint_layer, framing에 매핑된 딕셔너리 반환
+        data = {
+            "support": [text for cb, text in self.support_checkboxes if cb.isChecked()],
+            "paint_layer": [text for cb, text in self.paint_checkboxes if cb.isChecked()],
+            "framing": [text for cb, text in self.framing_checkboxes if cb.isChecked()]
+        }
+        return data
+    
+    def set_data(self, data: dict):
+        #data 딕셔너리에 각 키에 해당하는 리스트 꺼냄
+        """support, paint_layer, framing 체크박스 설정"""
+        support_values = data.get("support", [])
+        paint_values = data.get("paint_layer", [])
+        framing_values = data.get("framing", [])
+
+        #각 (checkbox, text) 순회, text가 포함되어 있으면 cb.setChecked(True), cb.setChecked(False)
+        for cb, text in self.support_checkboxes:
+            cb.setChecked(text in support_values)
+
+        for cb, text in self.paint_checkboxes:
+            cb.setChecked(text in paint_values)
+
+        for cb, text in self.framing_checkboxes:
+            cb.setChecked(text in framing_values)
+
+class Widget4(QWidget):
+    #수직 레이아웃 깔아서 추가되는 위젯을 위에서 아래로 쌓을 수 있도록 함
+    def __init__(self, parent=None):
+        super().__init__(parent) 
+
+        #QLabel 하나를 만들어 widget4 for Nothing 텍스트 표시
+        layout = QVBoxLayout(self)
+        label = QLabel("widget4 for Nothing")
+        layout.addWidget(label)
