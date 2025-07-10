@@ -136,29 +136,32 @@ class TreeTableApp(QWidget):
         self.tree_model.clear()
         self.tree_model.setHorizontalHeaderLabels(["Tree View"])
 
-        #JSON의 name과 data
+        #JSON의 name과 data읽고 lvl이 1이면 data 내 "전시회명"을 표시 이름으로 대체 가능
         def build(parent, node, lvl):
             name = node.get("name", "Unnamed")
             info = node.get("data", {})
             if lvl == 1 and "전시회명" in info:
                 name = info["전시회명"]
             item = QStandardItem(name)
-            item.setData(info, INFO_ROLE)
+            item.setData(info, INFO_ROLE)    
+            #부모에 appendRow, 자식들에 build(item, child, lvl+1)
             parent.appendRow(item)
             for c in node.get("children", []):
                 build(item, c, lvl+1)
-
+        #최상위 노드부터 트리 재구성
         root = self.tree_model.invisibleRootItem()
         for n in data:
             build(root, n, 1)
         self.tree_view.expandAll()
 
     def debug1(self):
+        #현재 활성화된 하위 위젯이 get_data 갖고 있으면 콘솔에 출력
         widget = self.stacked_widget.currentWidget()
         if hasattr(widget, 'get_data'):
             print(widget.get_data())
 
     def debug2(self):
+        #example 1~3 준비, 활성 위젯이 set_data 지원할 경우 각 Widget에 매칭되는 example 넘겨서 폼에 채움
         example1 = {"전시회명": "2025 예술전", "주최기관": "현대미술재단", "후원기관": "문화체육관광부"}
         example2 = {"이름": "홍길동", "국적": "한국", "출생년도": "1900", "사망년도": "1999.04.04.", "학력": "서울대학교 미술대학", "작품 경향": "추상화", "약력": "국내외 전시 다수"}
         example3 = {
@@ -171,9 +174,11 @@ class TreeTableApp(QWidget):
             w.set_data(example3 if isinstance(w, Widget3) else example1 if isinstance(w, Widget1) else example2)
 
     def debug3(self):
+        #스택 위젯의 현재 페이지 강제 전환
         self.stacked_widget.setCurrentIndex(3)
 
     def debug4(self):
+        #Widget3의 서브탭(widget31,32,33) 활성화 감지, 해당 서브탭의 get_data 호출해 콘솔에 출력
         widget = self.stacked_widget.currentWidget()
         if isinstance(widget, Widget3):
             tab = widget.tab_widget.currentWidget()
@@ -187,6 +192,7 @@ class TreeTableApp(QWidget):
 
     def on_tree_item_selected(self, index):
         # 이전 선택 아이템 저장
+        #마지막에 선택했던 노드의 폼 데이터를 INFO_ROLE에 저장
         if self.current_tree_index is not None:
             prev = self.stacked_widget.currentWidget()
             if hasattr(prev, "get_data"):
@@ -194,11 +200,12 @@ class TreeTableApp(QWidget):
                 self.tree_model.itemFromIndex(self.current_tree_index).setData(d, INFO_ROLE)
 
         # 신규 선택 처리
+        #새로 클릭된 노드 기억, 노드 level과 저장된 데이터 가져옴
         self.current_tree_index = index
         item  = self.tree_model.itemFromIndex(index)
         lvl   = self.get_item_level(index)
         data  = item.data(INFO_ROLE) or {}
-
+        #Project(lvl1): Widget1, Artist(lvl2): Widget2, Artwork(lvl3): Widget3, 그 외는 빈 화면
         if lvl == 1:
             self.stacked_widget.setCurrentIndex(1)
             self.widget1.set_data(data)
@@ -212,6 +219,7 @@ class TreeTableApp(QWidget):
             self.stacked_widget.setCurrentIndex(0)
 
     def keyPressEvent(self, event):
+        #ESC 누르면 트리뷰 선택 해제, 이벤트 소비
         if event.key() == Qt.Key_Escape:
             self.tree_view.clearSelection()
             event.accept()
@@ -219,6 +227,7 @@ class TreeTableApp(QWidget):
             super().keyPressEvent(event)
 
     def get_item_level(self, index):
+        #QModelIndex로 깊이 계산하여 반환
         level = 0
         while index.isValid():
             level += 1
