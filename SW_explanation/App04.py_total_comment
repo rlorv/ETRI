@@ -14,14 +14,17 @@ class TreeTableApp(QWidget):
         self.setLayout(main_layout)
 
     def init_ui(self):
+        #윈도우 타이틀을 "예술작품 상태조사 지원 도구"로 지정, 크기 조정
         self.setWindowTitle("예술작품 상태조사 지원 도구")
         self.setGeometry(0, 0, 1200, 600)
-
+    
     def init_ds(self):
+        #새 항목을 클리할 때 기존 데이터를 저장하거나 로드할 때 쓸 변수
         self.current_tree_index = None
 
     def init_left(self):
         # 버튼 생성 및 슬롯 연결
+        #Create, Delete, Save, Load 4개의 QPushButton, 각 버튼 클릭 시 각 슬롯 호출
         self.create_button = QPushButton("Create")
         self.delete_button = QPushButton("Delete")
         self.save_button   = QPushButton("Save")
@@ -32,6 +35,7 @@ class TreeTableApp(QWidget):
         self.load_button.clicked.connect(self.load_data)
 
         # 트리뷰와 모델
+        #QTreeView + QStandardItemModel: 헤더 라벨을 "Tree View"로 지정
         self.tree_view  = QTreeView()
         self.tree_model = QStandardItemModel()
         self.tree_model.setHorizontalHeaderLabels(["Tree View"])
@@ -39,6 +43,7 @@ class TreeTableApp(QWidget):
         self.tree_view.clicked.connect(self.on_tree_item_selected)
 
         # 레이아웃 구성
+        #QVBoxLayout에 버튼들을 트리뷰 순으로 추가
         left_layout = QVBoxLayout()
         left_layout.addWidget(self.create_button)
         left_layout.addWidget(self.delete_button)
@@ -48,6 +53,8 @@ class TreeTableApp(QWidget):
         return left_layout
 
     def init_right(self):
+        #StackWidget 생성-index0: 빈 QWidget, index1~3: 각각 Widget1~3, index4: ImageViewerApp
+        #처음에는 index 0
         self.stacked_widget = QStackedWidget()
         self.stacked_widget.addWidget(QWidget())  # placeholder index 0
         self.stacked_widget.addWidget(Widget1())  # index 1
@@ -56,12 +63,17 @@ class TreeTableApp(QWidget):
         self.stacked_widget.addWidget(ImageViewerApp())  # index 4
         self.stacked_widget.setCurrentIndex(0)
 
+        #수직 박스 layout에 stack widget 추가, layout return
         right_layout = QVBoxLayout()
         right_layout.addWidget(self.stacked_widget)
         return right_layout
 
     def create_item(self):
+        #현재 선택된 트리 노드의 index 목록 가져옴
         selected = self.tree_view.selectedIndexes()
+        #선택된 노드가 있으면 첫번째 선택 index를 idx에, 그 QStandardItem을 parent에 저장
+        #get_item_level로 노드의 레벨(1: Project, 2: Artist, 3: Artwork 계산), 그 이후로는 자식 생성 불가 메시지
+        #새 노드 빈 정보를 INFO_ROLE에 저장, 부모에 appendRow로 추가, tree_view.expand(idx)로 확장하여 표시
         if selected:
             idx = selected[0]
             parent = self.tree_model.itemFromIndex(idx)
@@ -84,6 +96,7 @@ class TreeTableApp(QWidget):
             root.appendRow(new)
 
     def delete_item(self):
+        #selected로 삭제할 노드를 확인하고, 있으면 트리 모델에서 삭제
         selected = self.tree_view.selectedIndexes()
         if selected:
             idx = selected[0]
@@ -94,6 +107,7 @@ class TreeTableApp(QWidget):
             QMessageBox.warning(self, "Warning", "No item selected to delete!")
 
     def save_data(self):
+    #serialize함수-name: 노드 text, data: INFO_ROLE에 저장된 dict, children: 자식 노드 배열 재귀 호출하여 리스트 반환
         def serialize(item):
             return {
                 "name": item.text(),
@@ -109,6 +123,7 @@ class TreeTableApp(QWidget):
                 json.dump(payload, f, indent=4, ensure_ascii=False)
 
     def load_data(self):
+        #파일 열어서 JSON parsing, 트리 모델 초기화
         path, _ = QFileDialog.getOpenFileName(self, "Open File", "", "JSON Files (*.json)")
         if not path:
             return
@@ -121,6 +136,7 @@ class TreeTableApp(QWidget):
         self.tree_model.clear()
         self.tree_model.setHorizontalHeaderLabels(["Tree View"])
 
+        #JSON의 name과 data
         def build(parent, node, lvl):
             name = node.get("name", "Unnamed")
             info = node.get("data", {})
