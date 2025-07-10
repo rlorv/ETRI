@@ -1,1 +1,211 @@
+class TreeTableApp(QWidget):
+
+    def __init__(self):
+        super().__init__()
+        self.init_ui()
+        self.init_ds()
+
+        left_layout = self.init_left()
+        right_layout = self.init_right()
+
+        main_layout = QHBoxLayout()
+        main_layout.addLayout(left_layout, 1)
+        main_layout.addLayout(right_layout, 2)
+        self.setLayout(main_layout)
+
+    def init_ui(self):
+        self.setWindowTitle("예술작품 상태조사 지원 도구")
+        self.setGeometry(0, 0, 1200, 600)
+
+    def init_ds(self):
+        self.current_tree_index = None
+
+    def init_left(self):
+        # 버튼 생성 및 슬롯 연결
+        self.create_button = QPushButton("Create")
+        self.delete_button = QPushButton("Delete")
+        self.save_button   = QPushButton("Save")
+        self.load_button   = QPushButton("Load")
+        self.create_button.clicked.connect(self.create_item)
+        self.delete_button.clicked.connect(self.delete_item)
+        self.save_button.clicked.connect(self.save_data)
+        self.load_button.clicked.connect(self.load_data)
+
+        # 트리뷰와 모델
+        self.tree_view  = QTreeView()
+        self.tree_model = QStandardItemModel()
+        self.tree_model.setHorizontalHeaderLabels(["Tree View"])
+        self.tree_view.setModel(self.tree_model)
+        self.tree_view.clicked.connect(self.on_tree_item_selected)
+
+        # 레이아웃 구성
+        left_layout = QVBoxLayout()
+        left_layout.addWidget(self.create_button)
+        left_layout.addWidget(self.delete_button)
+        left_layout.addWidget(self.save_button)
+        left_layout.addWidget(self.load_button)
+        left_layout.addWidget(self.tree_view)
+        return left_layout
+
+    def init_right(self):
+        self.stacked_widget = QStackedWidget()
+        self.stacked_widget.addWidget(QWidget())  # placeholder index 0
+        self.stacked_widget.addWidget(Widget1())  # index 1
+        self.stacked_widget.addWidget(Widget2())  # index 2
+        self.stacked_widget.addWidget(Widget3())  # index 3
+        self.stacked_widget.addWidget(ImageViewerApp())  # index 4
+        self.stacked_widget.setCurrentIndex(0)
+
+        right_layout = QVBoxLayout()
+        right_layout.addWidget(self.stacked_widget)
+        return right_layout
+
+    def create_item(self):
+        selected = self.tree_view.selectedIndexes()
+        if selected:
+            idx = selected[0]
+            parent = self.tree_model.itemFromIndex(idx)
+            self.store_current_item_data()
+            level = self.get_item_level(idx)
+            if level == 1:
+                new = QStandardItem("Artist")
+            elif level == 2:
+                new = QStandardItem("Artwork")
+            else:
+                QMessageBox.warning(self, "Warning", "Cannot create a child for an Artwork!")
+                return
+            new.setData({}, INFO_ROLE)
+            parent.appendRow(new)
+            self.tree_view.expand(idx)
+        else:
+            root = self.tree_model.invisibleRootItem()
+            new = QStandardItem("Project")
+            new.setData({}, INFO_ROLE)
+            root.appendRow(new)
+
+    def delete_item(self):
+        selected = self.tree_view.selectedIndexes()
+        if selected:
+            idx = selected[0]
+            self.tree_model.removeRow(idx.row(), idx.parent())
+            if self.current_tree_index == idx:
+                self.current_tree_index = None
+        else:
+            QMessageBox.warning(self, "Warning", "No item selected to delete!")
+
+    def save_data(self):
+        def serialize(item):
+            return {
+                "name": item.text(),
+                "data": item.data(INFO_ROLE) or {},
+                "children": [serialize(item.child(r)) for r in range(item.rowCount())]
+            }
+
+        root = self.tree_model.invisibleRootItem()
+        payload = [serialize(root.child(r)) for r in range(root.rowCount())]
+        path, _ = QFileDialog.getSaveFileName(self, "Save File", "", "JSON Files (*.json)")
+        if path:
+            with open(path, 'w', encoding='utf-8') as f:
+                json.dump(payload, f, indent=4, ensure_ascii=False)
+
+    def load_data(self):
+        path, _ = QFileDialog.getOpenFileName(self, "Open File", "", "JSON Files (*.json)")
+        if not path:
+            return
+        try:
+            data = json.load(open(path, 'r', encoding='utf-8'))
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"Failed to load file:\n{e}")
+            return
+
+        self.tree_model.clear()
+        self.tree_model.setHorizontalHeaderLabels(["Tree View"])
+
+        def build(parent, node, lvl):
+            name = node.get("name", "Unnamed")
+            info = node.get("data", {})
+            if lvl == 1 and "전시회명" in info:
+                name = info["전시회명"]
+            item = QStandardItem(name)
+            item.setData(info, INFO_ROLE)
+            parent.appendRow(item)
+            for c in node.get("children", []):
+                build(item, c, lvl+1)
+
+        root = self.tree_model.invisibleRootItem()
+        for n in data:
+            build(root, n, 1)
+        self.tree_view.expandAll()
+
+    def debug1(self):
+        widget = self.stacked_widget.currentWidget()
+        if hasattr(widget, 'get_data'):
+            print(widget.get_data())
+
+    def debug2(self):
+        example1 = {"전시회명": "2025 예술전", "주최기관": "현대미술재단", "후원기관": "문화체육관광부"}
+        example2 = {"이름": "홍길동", "국적": "한국", "출생년도": "1900", "사망년도": "1999.04.04.", "학력": "서울대학교 미술대학", "작품 경향": "추상화", "약력": "국내외 전시 다수"}
+        example3 = {
+            "widget31": {"Number":"A-001","Artist":"홍길동","Title":"무제","Date":"2023","Technique":"Oil on canvas","Dimension":"60 x 80 cm","Frame Dimension":"65 x 85 cm","Reference":"Ref123","category":["painting"]},
+            "widget32": {"support":["마모","눌림","곰팡이"],"paint_layer":["균열","들뜸","긁힘"],"framing":["이물질","찍힘","후면 기재사항"]},
+            "widget33": {}
+        }
+        w = self.stacked_widget.currentWidget()
+        if hasattr(w, 'set_data'):
+            w.set_data(example3 if isinstance(w, Widget3) else example1 if isinstance(w, Widget1) else example2)
+
+    def debug3(self):
+        self.stacked_widget.setCurrentIndex(3)
+
+    def debug4(self):
+        widget = self.stacked_widget.currentWidget()
+        if isinstance(widget, Widget3):
+            tab = widget.tab_widget.currentWidget()
+            if tab is widget.widget31:
+                data = tab.get_data()
+            elif tab is widget.widget32:
+                data = tab.get_data()
+            elif tab is widget.widget33:
+                data = tab.get_data()
+            print(data)
+
+    def on_tree_item_selected(self, index):
+        # 이전 선택 아이템 저장
+        if self.current_tree_index is not None:
+            prev = self.stacked_widget.currentWidget()
+            if hasattr(prev, "get_data"):
+                d = prev.get_data()
+                self.tree_model.itemFromIndex(self.current_tree_index).setData(d, INFO_ROLE)
+
+        # 신규 선택 처리
+        self.current_tree_index = index
+        item  = self.tree_model.itemFromIndex(index)
+        lvl   = self.get_item_level(index)
+        data  = item.data(INFO_ROLE) or {}
+
+        if lvl == 1:
+            self.stacked_widget.setCurrentIndex(1)
+            self.widget1.set_data(data)
+        elif lvl == 2:
+            self.stacked_widget.setCurrentIndex(2)
+            self.widget2.set_data(data)
+        elif lvl == 3:
+            self.stacked_widget.setCurrentIndex(3)
+            self.widget3.set_data(data)
+        else:
+            self.stacked_widget.setCurrentIndex(0)
+
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key_Escape:
+            self.tree_view.clearSelection()
+            event.accept()
+        else:
+            super().keyPressEvent(event)
+
+    def get_item_level(self, index):
+        level = 0
+        while index.isValid():
+            level += 1
+            index = index.parent()
+        return level
 
