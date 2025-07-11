@@ -1,0 +1,47 @@
+class ConditionMapViewer
+ㄴ def get_autosave_path
+    - condition_map_path에서 파일명만 떼어내어 확장자 제거
+ㄴ def init
+    - 기본 위젯 설정, 변수 설정
+    - 매칭 정보: matches, match_history, redo_stack
+    - 마우스 드래그용 변수: selected_zoom_index, temp_rect_start, temp_rect_end
+    - 상태 플래그: mouse_clicked, matching_mode
+    - 세로로 버튼 나열
+    - 버튼 10개(Match~Reset Help Flag)
+    - 버튼 클릭 시 연결되는 슬롯
+    - QLabel에 원본 이미지를 QPixmap으로 로드, 500px로 스케일
+    - 확대 썸네일 스크롤 영역
+ㄴ def set_data
+    - data를 콘솔에 출력
+ㄴ def open_images
+    - getOpenFileNames-한번에 여러 이미지 고를 수 있는 표준 파일 선택 창
+    - 사용자가 파일 선택하면 file_names에 경로 리스트 담김
+ㄴ def load_images
+    - 기존 이미지 위젯 제거
+    - 그리드에 새 이미지 추가
+    - 클릭 시 해당 라벨을 select_image()에 전달
+    - 다음 셀로 이동
+    - 컨테이너 크기 재조정
+ㄴ def set_as_condition_map
+    - select_indices 확인, image_categories에 condition_map으로 마킹, 썸네일 스타일 새로 적용
+ㄴ def set_as_zoom_in
+    - set_as_condition_map과 거의 동일, 이미지 zoom_in으로 지정, 스타일 update
+ㄴ def re_layout_images
+    - 스크롤 위치 유지, layout 클리어, 재배치, 스타일 update, scroll 원래대로
+ㄴ def select_image
+    - 클릭된 label이 self.image_labels 중 몇번째인지 찾아 index에 저장
+    - key modifier 검사
+    - shift-last_selected_index부터 현재 index까지 범위 선택
+    - ctrl-해당 index가 이미 선택됐으면 선택 해제, 아니면 추가 선택
+    - 일반 클릭-단일 선택, 기준점 update
+ㄴ def update_selection_style
+    - image_labels 순회, 각 index와 label 가져옴
+    - i가 image_categories 키에 있으면 condition_map일때랑 zoom_in일때 다르게 설정
+ㄴ def move_left
+    - 한칸씩 왼쪽으로 이동시킴
+ㄴ def move_right
+    - 한 칸씩 오른쪽으로 이동, 마지막 index 제외, 내림차순 정렬로 순회(겹침 방지)
+ㄴ def delete_image
+    - 선택한 모든 이미지를 목록에서 제거
+ㄴ def view_condition_map
+    - condition_map/zoom_in에 맞게 파일 분리, condition_map check, viewer 생성 및 표시
