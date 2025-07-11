@@ -1,0 +1,27 @@
+import os
+import win32com.client
+
+def excel_to_pdf(src_path: str, dst_path: str):
+    excel = win32com.client.Dispatch("Excel.Application")
+    excel.Visible = False
+    excel.DisplayAlerts = False
+
+    try:
+        wb = excel.Workbooks.Open(src_path)
+
+        wb.ExportAsFixedFormat(
+            Type=0,
+            Filename=dst_path,
+            Quality=0,
+            IncludeDocProperties=True,
+            IgnorePrintAreas=False
+        )
+    finally:
+        wb.Close(False)
+        excel.Quit()
+
+if __name__ == "__main__":
+    src = r"D:\예술작품 상태조사 지원 SW\SW_to_xlsx\report_filled_openpyxl.xlsx"
+    dst = os.path.splitext(src)[0] + ".pdf" 
+    excel_to_pdf(src, dst)
+    print(f"PDF 생성 완료: {dst}")
